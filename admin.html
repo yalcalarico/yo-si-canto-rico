@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador - Yo Sí Canto - RICO</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>⚙️ Panel de Administrador</h1>
+            <a href="index.html" class="btn-back">← Volver al inicio</a>
+        </header>
+
+        <main class="admin-content">
+            <!-- Sidebar de Temporadas -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3>📅 Temporadas</h3>
+                    <button id="openModalBtn" class="btn-add-season" title="Crear nueva temporada">
+                        <span style="font-size: 1.5rem; font-weight: bold;">+</span>
+                    </button>
+                </div>
+                <div class="sidebar-content">
+                    <div class="current-season-card" id="currentSeasonCard">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <div class="seasons-list" id="seasonsList">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Principal -->
+            <div class="main-panel">
+                <div style="display: flex; justify-content: space-between;">
+                    <!-- Sección de Participantes -->
+                    <div class="card" style="width: 48%;">
+                        <h2>Participantes</h2>
+                        <div class="add-section">
+                            <input type="text" id="participantName" placeholder="Nombre del participante" class="input-field">
+                            <button id="addParticipant" class="btn btn-primary">Agregar</button>
+                        </div>
+                        <ul id="participantsList" class="list"></ul>
+                    </div>
+
+                    <!-- Sección de Artistas -->
+                    <div class="card" style="width: 48%;">
+                        <h2>Artistas</h2>
+                        <div class="add-section">
+                            <input type="text" id="artistName" placeholder="Nombre del artista" class="input-field">
+                            <button id="addArtist" class="btn btn-primary">Agregar</button>
+                        </div>
+                        <ul id="artistsList" class="list"></ul>
+                    </div>
+                </div>
+            
+
+                <!-- Sección de Sorteo y Seguimiento -->
+                <div class="card">
+                    <h2>Sorteo y Seguimiento</h2>
+                    <p class="info-text">Asigna aleatoriamente un artista a cada participante y marca cuándo envían su video</p>
+                    <button id="performDraw" class="btn btn-secondary">🎲 Realizar Sorteo</button>
+                    <div id="drawResults" class="draw-results"></div>
+                </div>
+
+            <!-- Sección de Resultados -->
+            <div class="card">
+                <div id="resultSection" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <h3 style="color: var(--primary-color); margin: 0;">📊 Resultados</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Ver Resultados</p>
+                        </div>
+                        <button id="showResults" class="btn btn-accent">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">📊</span> 
+                            Ver Resultados
+                        </button>
+                    </div>
+                    <div id="resultsDisplay" class="results-display"></div>
+                </div>
+                
+
+                <div id="saveSeasonSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <h3 style="color: var(--primary-color); margin: 0;">💾 Guardar Cambios</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Guarda los cambios de la temporada actual en el historial</p>
+                        </div>
+                        <button id="saveCurrentSeason" class="btn btn-accent">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">💾</span>
+                            Guardar Temporada
+                        </button>
+                    </div>
+                    <div id="lastSaved" style="font-size: 0.85rem; color: var(--text-secondary); text-align: right;"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal para crear temporada -->
+    <div id="seasonModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🌟 Crear Nueva Temporada</h2>
+                <span class="modal-close" id="closeModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="info-text">Ingresa el nombre de la nueva temporada</p>
+                <input type="text" id="seasonNameModal" placeholder="Ej: Temporada 2, Navidad 2026, etc." class="input-field" autofocus>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelModal" class="btn btn-secondary">Cancelar</button>
+                <button id="createSeasonModal" class="btn btn-primary">Crear Temporada</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votación - Yo Sí Canto Rico</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>⭐ Votación</h1>
+            <a href="index.html" class="btn-back">← Volver al inicio</a>
+        </header>
+
+        <main class="voting-content">
+            <!-- Sidebar with Seasons and Voters -->
+            <aside class="voting-sidebar">
+                <div class="card sidebar-card">
+                    <h3>📅 Temporadas</h3>
+                    <div id="seasonsList" class="seasons-list">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+                
+                <div class="card sidebar-card">
+                    <h3>👥 Han Votado</h3>
+                    <div id="votersList" class="voters-list">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="voting-main">
+                <!-- Login Section -->
+                <div id="loginSection" class="card">
+                    <h2>Identifícate para votar</h2>
+                    <p class="info-text">Ingresa tu nombre para acceder a la votación</p>
+                    <div class="login-form">
+                        <input type="text" id="voterName" placeholder="Tu nombre" class="input-field">
+                        <button id="loginBtn" class="btn btn-primary">Ingresar</button>
+                    </div>
+                </div>
+
+                <!-- Voting Section -->
+                <div id="votingSection" class="voting-section" style="display: none;">
+                    <div class="card">
+                        <div class="voter-info">
+                            <h2>Bienvenido, <span id="currentVoterName"></span>!</h2>
+                            <button id="logoutBtn" class="btn btn-small">Cerrar sesión</button>
+                        </div>
+                        <p class="info-text">Califica cada presentación del 1 al 10</p>
+                    </div>
+
+                    <div id="participantsVotingList" class="participants-voting-list">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+
+                    <div class="card">
+                        <button id="submitVotes" class="btn btn-primary btn-large">Enviar Votos</button>
+                    </div>
+                </div>
+
+                <!-- No Season Section -->
+                <div id="noSeasonSection" class="card" style="display: none;">
+                    <h2>⚠️ No hay temporada activa</h2>
+                    <p class="info-text">El administrador aún no ha configurado la competencia.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="voting.js"></script>
+</body>
+</html>
