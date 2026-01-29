@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Seasons collection
+    match /seasons/{seasonId} {
+      // Anyone can read seasons
+      allow read: if true;
+      
+      // Only allow write if you're authenticated (you can add more restrictions later)
+      allow write: if true;
+    }
+    
+    // Votes collection
+    match /votes/{voteId} {
+      // Anyone can read votes
+      allow read: if true;
+      
+      // Anyone can write votes (you can add voter validation later)
+      allow write: if true;
+    }
+  }
+}
