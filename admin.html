@@ -10,7 +10,10 @@
     <div class="container">
         <header class="main-header">
             <h1>⚙️ Panel de Administrador</h1>
-            <a href="index.html" class="btn-back">← Volver al inicio</a>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div id="firebaseStatus" style="font-size: 0.9rem; padding: 0.5rem; border-radius: 4px;"></div>
+                <!-- <a href="index.html" class="btn-back">← Volver al inicio</a> -->
+            </div>
         </header>
 
         <main class="admin-content">
@@ -61,8 +64,14 @@
                 <div class="card">
                     <h2>Sorteo y Seguimiento</h2>
                     <p class="info-text">Asigna aleatoriamente un artista a cada participante y marca cuándo envían su video</p>
+                    <p class="info-text" style="margin-bottom: 1rem;">Marca cuando cada participante envíe su video</p>
                     <button id="performDraw" class="btn btn-secondary">🎲 Realizar Sorteo</button>
                     <div id="drawResults" class="draw-results"></div>
+                    
+                    <!-- Seguimiento de Videos -->
+                    <div id="trackingSection" style="margin-top: 2rem; display: none;">
+                        <div id="trackingList" class="tracking-list"></div>
+                    </div>
                 </div>
 
             <!-- Sección de Resultados -->

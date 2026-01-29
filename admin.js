@@ -69,6 +69,20 @@ seasonNameInput.addEventListener('keypress', (e) => {
 // Initialize
 async function init() {
     try {
+        // Show Firebase status
+        const statusDiv = document.getElementById('firebaseStatus');
+        if (statusDiv) {
+            if (typeof firebaseInitialized !== 'undefined' && firebaseInitialized) {
+                statusDiv.innerHTML = '🟢 Firebase conectado';
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                statusDiv.innerHTML = '🟡 Modo sin conexión (localStorage)';
+                statusDiv.style.backgroundColor = '#fff3cd';
+                statusDiv.style.color = '#856404';
+            }
+        }
+        
         await loadCurrentSeason();
         await loadAllSeasons();
         displayCurrentSeason();
@@ -419,6 +433,7 @@ async function removeArtist(index) {
 
 // Draw/Raffle
 performDrawBtn.addEventListener('click', async () => {
+
     if (!currentSeason) {
         alert('Debes activar una temporada primero');
         return;
@@ -429,8 +444,8 @@ performDrawBtn.addEventListener('click', async () => {
         return;
     }
 
-    if (participants.length !== artists.length) {
-        alert('El número de participantes debe ser igual al número de artistas');
+    if (artists.length < participants.length) {
+        alert('No hay suficientes artistas para todos los participantes');
         return;
     }
 
@@ -455,57 +470,202 @@ performDrawBtn.addEventListener('click', async () => {
 
     displayAssignments();
     await saveCurrentSeasonData();
+    
+    // Disable the button after draw
+    performDrawBtn.disabled = true;
+    performDrawBtn.innerHTML = '✓ Sorteo Realizado';
+    performDrawBtn.style.opacity = '0.6';
+    performDrawBtn.style.cursor = 'not-allowed';
+    
     alert('¡Sorteo realizado exitosamente!');
 });
 
 // Display assignments
 function displayAssignments() {
-    if (!drawResults || !trackingList) return;
+    console.log('displayAssignments called');
+    console.log('drawResults:', drawResults);
+    console.log('trackingList:', trackingList);
+    console.log('assignments:', assignments);
+    
+    if (!drawResults) {
+        console.log('drawResults no encontrado');
+        return;
+    }
     
     if (!currentSeason) {
         drawResults.innerHTML = '<p class="empty-message">Activa una temporada para ver asignaciones</p>';
-        trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
+        if (trackingList) trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
+        // Enable button
+        if (performDrawBtn) {
+            performDrawBtn.disabled = false;
+            performDrawBtn.innerHTML = '🎲 Realizar Sorteo';
+            performDrawBtn.style.opacity = '1';
+            performDrawBtn.style.cursor = 'pointer';
+        }
         return;
     }
 
     if (assignments.length === 0) {
+        console.log('No hay asignaciones');
         drawResults.innerHTML = '<p class="empty-message">No hay asignaciones. Realiza el sorteo primero.</p>';
-        trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
+        if (trackingList) trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
+        // Enable button
+        if (performDrawBtn) {
+            performDrawBtn.disabled = false;
+            performDrawBtn.innerHTML = '🎲 Realizar Sorteo';
+            performDrawBtn.style.opacity = '1';
+            performDrawBtn.style.cursor = 'pointer';
+        }
         return;
     }
 
-    drawResults.innerHTML = `
-        <h3>Asignaciones</h3>
-        <div class="assignments-grid">
-            ${assignments.map(a => `
-                <div class="assignment-card">
-                    <div class="participant-name">${a.participant}</div>
-                    <div class="arrow">→</div>
-                    <div class="artist-name">${a.artist}</div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+    console.log('Mostrando asignaciones...');
+    
+    // Disable button since there are assignments
+    if (performDrawBtn) {
+        performDrawBtn.disabled = true;
+        performDrawBtn.innerHTML = '✓ Sorteo Realizado';
+        performDrawBtn.style.opacity = '0.6';
+        performDrawBtn.style.cursor = 'not-allowed';
+    }
 
-    trackingList.innerHTML = assignments.map(a => `
-        <div class="tracking-item">
-            <div class="tracking-info">
-                <span class="participant-name">${a.participant}</span>
-                <span class="artist-name">${a.artist}</span>
+    // Show tracking section
+    const trackingSection = document.getElementById('trackingSection');
+    if (trackingSection) {
+        trackingSection.style.display = 'block';
+    }
+
+    // Clear drawResults since we'll use trackingList only
+    drawResults.innerHTML = '';
+
+    if (trackingList) {
+        trackingList.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Asignaciones</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="resetDraw()" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; background-color: #e74c3c;">
+                        🔄 Nuevo Sorteo
+                    </button>
+                    <button onclick="copyAssignmentsForWhatsApp()" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+                        📋 Copiar para WhatsApp
+                    </button>
+                </div>
             </div>
-            <label class="checkbox-label">
-                <input type="checkbox" ${videoStatus[a.participant] ? 'checked' : ''} 
-                       onchange="toggleVideoStatus('${a.participant}')">
-                <span>Video enviado</span>
-            </label>
-        </div>
-    `).join('');
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                ${assignments.map((a, index) => `
+                    <div style="display: flex; align-items: center; padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); gap: 1rem;">
+                        <span style="font-weight: bold; color: #6c5ce7; min-width: 2rem;">${index + 1}.</span>
+                        <span style="font-weight: 600; color: #2d3436; flex: 1;">${a.participant}</span>
+                        <span style="color: #6c5ce7; font-size: 1.2rem;">→</span>
+                        <span style="color: #636e72; flex: 1;">${a.artist}</span>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; white-space: nowrap;">
+                            <input type="checkbox" ${videoStatus[a.participant] ? 'checked' : ''} 
+                                   onchange="toggleVideoStatus('${a.participant}')"
+                                   style="cursor: pointer;">
+                            <span style="font-size: 0.9rem; color: #636e72;">Video enviado</span>
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+}
+
+// Reset draw - allow new sorteo
+async function resetDraw() {
+    if (!confirm('¿Estás seguro de que quieres hacer un nuevo sorteo? Esto borrará las asignaciones actuales.')) {
+        return;
+    }
+    
+    assignments = [];
+    videoStatus = {};
+    
+    // Enable the draw button
+    if (performDrawBtn) {
+        performDrawBtn.disabled = false;
+        performDrawBtn.innerHTML = '🎲 Realizar Sorteo';
+        performDrawBtn.style.opacity = '1';
+        performDrawBtn.style.cursor = 'pointer';
+    }
+    
+    displayAssignments();
+    await saveCurrentSeasonData();
 }
 
 // Toggle video status
 async function toggleVideoStatus(participant) {
     videoStatus[participant] = !videoStatus[participant];
     await saveCurrentSeasonData();
+}
+
+// Copy assignments for WhatsApp
+function copyAssignmentsForWhatsApp() {
+    if (!assignments || assignments.length === 0) {
+        alert('No hay asignaciones para copiar');
+        return;
+    }
+
+    const seasonName = currentSeason ? currentSeason.name : 'Sorteo';
+    
+    let message = `🎤 *${seasonName}* 🎤\n\n`;
+    message += `✨ *Asignaciones:* ✨\n\n`;
+    
+    assignments.forEach((a, index) => {
+        message += `${index + 1}. *${a.participant}* → ${a.artist}\n`;
+    });
+    
+    message += `\n¡Mucha suerte a todos! 🌟`;
+
+    // Try modern clipboard API first, fallback to textarea method
+    const copyToClipboard = async (text) => {
+        // Try modern API first
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.log('Clipboard API failed, using fallback');
+            }
+        }
+        
+        // Fallback method
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            textArea.remove();
+            return true;
+        } catch (err) {
+            console.error('Fallback failed:', err);
+            textArea.remove();
+            return false;
+        }
+    };
+
+    copyToClipboard(message).then(success => {
+        if (success) {
+            // Show success message
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ ¡Copiado!';
+            btn.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.backgroundColor = '';
+            }, 2000);
+        } else {
+            // Show message in alert as last resort
+            alert('No se pudo copiar automáticamente. Aquí está el mensaje:\n\n' + message);
+        }
+    });
 }
 
 // Results

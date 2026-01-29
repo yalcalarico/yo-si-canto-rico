@@ -25,6 +25,20 @@ const votersList = document.getElementById('votersList');
 // Initialize
 async function init() {
     try {
+        // Show Firebase status
+        const statusDiv = document.getElementById('firebaseStatus');
+        if (statusDiv) {
+            if (typeof firebaseInitialized !== 'undefined' && firebaseInitialized) {
+                statusDiv.innerHTML = '🟢 Firebase conectado';
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                statusDiv.innerHTML = '🟡 Modo sin conexión (localStorage)';
+                statusDiv.style.backgroundColor = '#fff3cd';
+                statusDiv.style.color = '#856404';
+            }
+        }
+        
         const currentSeason = await getCurrentSeason();
         
         if (currentSeason) {

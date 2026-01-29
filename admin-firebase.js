@@ -421,7 +421,9 @@ performDrawBtn.addEventListener('click', async () => {
         return;
     }
 
-    if (participants.length !== artists.length) {
+    console.log('Participants:', participants);
+    console.log('Artists:', artists);
+    if (participants.length >= artists.length) {
         alert('El número de participantes debe ser igual al número de artistas');
         return;
     }
