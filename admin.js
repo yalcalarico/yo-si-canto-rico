@@ -221,22 +221,24 @@ function displayCurrentSeason() {
     if (!currentSeason) {
         currentSeasonCard.innerHTML = `
             <div class="no-season">
-                <p>No hay temporada activa</p>
+                <p>⚪ No hay temporada activa</p>
                 <p class="hint">Crea una nueva temporada para comenzar</p>
             </div>
         `;
         if (saveSeasonSection) saveSeasonSection.style.display = 'none';
+        if (resultSection) resultSection.style.display = 'none';
         return;
     }
 
     currentSeasonCard.innerHTML = `
         <div class="season-info">
-            <h4>${currentSeason.name}</h4>
+            <h4>🏆 ${currentSeason.name}</h4>
             <p class="season-date">Creada: ${currentSeason.createdAt ? new Date(currentSeason.createdAt.seconds * 1000).toLocaleDateString() : 'Ahora'}</p>
-            <span class="badge badge-success">Activa</span>
+            <span class="badge badge-success">Temporada Activa</span>
         </div>
     `;
     if (saveSeasonSection) saveSeasonSection.style.display = 'block';
+    if (resultSection)  resultSection.style.display = 'block';
 }
 
 // Display all seasons
@@ -721,23 +723,45 @@ showResultsBtn.addEventListener('click', async () => {
         .sort((a, b) => b.average - a.average);
 
     // Display results
+    const maxAverage = Math.max(...sortedResults.map(r => parseFloat(r.average)));
+    
     resultsDisplay.innerHTML = `
         <h3>Resultados de ${currentSeason.name}</h3>
         <p>Total de votantes: ${votes.length}</p>
-        <div class="results-table">
-            ${sortedResults.map((r, i) => `
-                <div class="result-row ${i === 0 ? 'winner' : ''}">
-                    <div class="rank">${i + 1}</div>
-                    <div class="result-info">
-                        <div class="participant-name">${r.participant}</div>
-                        <div class="artist-name">${r.artist}</div>
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
+            ${sortedResults.map((r, i) => {
+                const percentage = maxAverage > 0 ? (parseFloat(r.average) / maxAverage) * 100 : 0;
+                const barColor = i === 0 ? '#f39c12' : i === 1 ? '#95a5a6' : i === 2 ? '#cd7f32' : '#6c5ce7';
+                
+                return `
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem; font-weight: bold; color: ${barColor}; min-width: 2rem;">${i + 1}</span>
+                            <div>
+                                <div style="font-weight: 600; font-size: 1.1rem; color: black;">${r.participant}</div>
+                                <div style="font-size: 0.9rem; color: #636e72;">Canta: ${r.artist}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: ${barColor};">${r.average}</div>
+                            <div style="font-size: 0.85rem; color: #636e72;">${r.voteCount} votos</div>
+                        </div>
                     </div>
-                    <div class="score">
-                        <div class="average">${r.average}</div>
-                        <div class="votes">${r.voteCount} votos</div>
+                    <div style="background: #ecf0f1; border-radius: 10px; height: 30px; overflow: hidden; position: relative;">
+                        <div style="background: linear-gradient(90deg, ${barColor}, ${barColor}dd); height: 100%; width: ${percentage}%; border-radius: 10px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 0.5rem;">
+                            ${percentage > 20 ? `<span style="color: white; font-weight: 600; font-size: 0.9rem;">${r.average}</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: 3rem; font-size: 0.85rem; color: #666;">
+                        ${r.ratings.map(rating => `
+                            <span style="background: #f8f9fa; padding: 0.25rem 0.75rem; border-radius: 20px; border: 1px solid #dee2e6;">
+                                <strong>${rating.voter}:</strong> ${rating.rating} pts
+                            </span>
+                        `).join('')}
                     </div>
                 </div>
-            `).join('')}
+            `}).join('')}
         </div>
     `;
 });

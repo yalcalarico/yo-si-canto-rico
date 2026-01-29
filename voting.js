@@ -227,16 +227,11 @@ function displayVotingSection() {
                 <div class="rating-section">
                     <label>Calificación (1-10):</label>
                     <div class="rating-controls">
-                        <input type="range" min="1" max="10" value="${currentRating || 5}" 
-                               class="rating-slider" 
+                        <input type="number" min="1" max="10" value="${currentRating || ''}" 
+                               class="rating-input" 
                                id="rating-${assignment.participant}"
-                               oninput="updateRating('${assignment.participant}', this.value)">
-                        <span class="rating-value" id="value-${assignment.participant}">${currentRating || 5}</span>
-                    </div>
-                    <div class="rating-labels">
-                        <span>1</span>
-                        <span>5</span>
-                        <span>10</span>
+                               oninput="updateRating('${assignment.participant}', this.value)"
+                               placeholder="Escribe tu calificación">
                     </div>
                 </div>
             </div>
@@ -248,10 +243,11 @@ function displayVotingSection() {
 
 // Update rating
 function updateRating(participant, value) {
-    userRatings[participant] = parseInt(value);
-    const valueDisplay = document.getElementById(`value-${participant}`);
-    if (valueDisplay) {
-        valueDisplay.textContent = value;
+    const numValue = parseInt(value);
+    if (numValue >= 1 && numValue <= 10) {
+        userRatings[participant] = numValue;
+    } else if (value === '') {
+        userRatings[participant] = 0;
     }
 }
 
