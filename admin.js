@@ -202,6 +202,8 @@ async function activateSeason(seasonId) {
 
 // Display current season
 function displayCurrentSeason() {
+    if (!currentSeasonCard) return;
+    
     if (!currentSeason) {
         currentSeasonCard.innerHTML = `
             <div class="no-season">
@@ -209,7 +211,7 @@ function displayCurrentSeason() {
                 <p class="hint">Crea una nueva temporada para comenzar</p>
             </div>
         `;
-        saveSeasonSection.style.display = 'none';
+        if (saveSeasonSection) saveSeasonSection.style.display = 'none';
         return;
     }
 
@@ -220,11 +222,13 @@ function displayCurrentSeason() {
             <span class="badge badge-success">Activa</span>
         </div>
     `;
-    saveSeasonSection.style.display = 'block';
+    if (saveSeasonSection) saveSeasonSection.style.display = 'block';
 }
 
 // Display all seasons
 function displaySeasons() {
+    if (!seasonsList) return;
+    
     if (!allSeasons || allSeasons.length === 0) {
         seasonsList.innerHTML = '<p class="empty-message">No hay temporadas guardadas</p>';
         return;
@@ -326,6 +330,8 @@ participantNameInput.addEventListener('keypress', (e) => {
 });
 
 function displayParticipants() {
+    if (!participantsList) return;
+    
     if (!currentSeason) {
         participantsList.innerHTML = '<li class="empty-message">Activa una temporada para agregar participantes</li>';
         return;
@@ -384,6 +390,8 @@ artistNameInput.addEventListener('keypress', (e) => {
 });
 
 function displayArtists() {
+    if (!artistsList) return;
+    
     if (!currentSeason) {
         artistsList.innerHTML = '<li class="empty-message">Activa una temporada para agregar artistas</li>';
         return;
@@ -452,6 +460,8 @@ performDrawBtn.addEventListener('click', async () => {
 
 // Display assignments
 function displayAssignments() {
+    if (!drawResults || !trackingList) return;
+    
     if (!currentSeason) {
         drawResults.innerHTML = '<p class="empty-message">Activa una temporada para ver asignaciones</p>';
         trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
@@ -573,4 +583,6 @@ showResultsBtn.addEventListener('click', async () => {
 });
 
 // Initialize on load
-init();
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+});

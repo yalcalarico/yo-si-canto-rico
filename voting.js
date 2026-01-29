@@ -48,6 +48,8 @@ async function loadAllSeasons() {
 
 // Display seasons list
 function displaySeasonsList() {
+    if (!seasonsList) return;
+    
     if (!allSeasons || allSeasons.length === 0) {
         seasonsList.innerHTML = '<div class="empty-message">No hay temporadas disponibles</div>';
         return;
@@ -139,25 +141,25 @@ logoutBtn.addEventListener('click', () => {
 
 // Show login section
 function showLoginSection() {
-    loginSection.style.display = 'block';
-    votingSection.style.display = 'none';
-    noSeasonSection.style.display = 'none';
+    if (loginSection) loginSection.style.display = 'block';
+    if (votingSection) votingSection.style.display = 'none';
+    if (noSeasonSection) noSeasonSection.style.display = 'none';
 }
 
 // Show voting section
 function showVotingSection() {
     if (!selectedSeason || !assignments || assignments.length === 0) {
-        loginSection.style.display = 'none';
-        votingSection.style.display = 'none';
-        noSeasonSection.style.display = 'block';
+        if (loginSection) loginSection.style.display = 'none';
+        if (votingSection) votingSection.style.display = 'none';
+        if (noSeasonSection) noSeasonSection.style.display = 'block';
         return;
     }
 
-    loginSection.style.display = 'none';
-    votingSection.style.display = 'block';
-    noSeasonSection.style.display = 'none';
+    if (loginSection) loginSection.style.display = 'none';
+    if (votingSection) votingSection.style.display = 'block';
+    if (noSeasonSection) noSeasonSection.style.display = 'none';
     
-    currentVoterName.textContent = currentVoter;
+    if (currentVoterName) currentVoterName.textContent = currentVoter;
     displayVotingSection();
     displayVotersList();
 }
@@ -184,6 +186,8 @@ async function loadUserVotes() {
 
 // Display voting section
 function displayVotingSection() {
+    if (!participantsVotingList || !submitVotesBtn) return;
+    
     if (!assignments || assignments.length === 0) {
         participantsVotingList.innerHTML = '<p class="empty-message">No hay participantes para votar</p>';
         submitVotesBtn.disabled = true;
@@ -274,6 +278,8 @@ submitVotesBtn.addEventListener('click', async () => {
 
 // Display voters list
 async function displayVotersList() {
+    if (!votersList) return;
+    
     if (!selectedSeason) {
         votersList.innerHTML = '<div class="empty-message">Selecciona una temporada</div>';
         return;
@@ -308,4 +314,6 @@ async function displayVotersList() {
 }
 
 // Initialize on load
-init();
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+});
