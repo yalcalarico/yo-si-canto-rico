@@ -36,6 +36,18 @@
 
             <!-- Main Content -->
             <div class="voting-main">
+
+                <!-- Results Section (always visible, collapsible) -->
+                <div id="resultsSection" class="card results-collapsible" style="display:none;">
+                    <button class="results-toggle" onclick="toggleResults()">
+                        <span>📊 Resultados en vivo</span>
+                        <span id="resultsToggleIcon">▼</span>
+                    </button>
+                    <div id="resultsBody" class="results-body">
+                        <div id="resultsChart" class="results-chart"></div>
+                    </div>
+                </div>
+
                 <!-- Login Section -->
                 <div id="loginSection" class="card">
                     <h2>Identifícate para votar</h2>
@@ -53,7 +65,7 @@
                             <h2>Bienvenido, <span id="currentVoterName"></span>!</h2>
                             <button id="logoutBtn" class="btn btn-small">Cerrar sesión</button>
                         </div>
-                        <p class="info-text">Califica cada presentación del 1 al 10</p>
+                        <p class="info-text">Elige al participante que más te convenció</p>
                     </div>
 
                     <div id="participantsVotingList" class="participants-voting-list">
@@ -61,7 +73,7 @@
                     </div>
 
                     <div class="card">
-                        <button id="submitVotes" class="btn btn-primary btn-large">Enviar Votos</button>
+                        <button id="submitVotes" class="btn btn-primary btn-large">Enviar Voto</button>
                     </div>
                 </div>
 

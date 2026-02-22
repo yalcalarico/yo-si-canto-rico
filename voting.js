@@ -2,7 +2,7 @@
 let currentVoter = null;
 let assignments = [];
 let videoStatus = {};
-let userRatings = {};
+let userVote = null; // El participante que el usuario eligió como ganador
 let selectedSeason = null;
 let allSeasons = [];
 
@@ -49,6 +49,8 @@ async function init() {
         
         await loadAllSeasons();
         displaySeasonsList();
+        await displayVotersList();
+        await displayResults();
         checkLoginStatus();
     } catch (error) {
         console.error('Error initializing:', error);
@@ -103,6 +105,7 @@ async function selectSeason(seasonId) {
         }
         
         await displayVotersList();
+        await displayResults();
     } catch (error) {
         console.error('Error selecting season:', error);
         alert('Error al cargar la temporada');
@@ -110,11 +113,12 @@ async function selectSeason(seasonId) {
 }
 
 // Check login status
-function checkLoginStatus() {
+async function checkLoginStatus() {
     const savedVoter = sessionStorage.getItem('currentVoter');
     
     if (savedVoter) {
         currentVoter = savedVoter;
+        await loadUserVotes();
         showVotingSection();
     } else {
         showLoginSection();
@@ -145,12 +149,10 @@ voterNameInput.addEventListener('keypress', (e) => {
 
 // Logout
 logoutBtn.addEventListener('click', () => {
-    if (confirm('¿Seguro que quieres cerrar sesión?')) {
-        currentVoter = null;
-        userRatings = {};
-        sessionStorage.removeItem('currentVoter');
-        showLoginSection();
-    }
+    currentVoter = null;
+    userVote = null;
+    sessionStorage.removeItem('currentVoter');
+    showLoginSection();
 });
 
 // Show login section
@@ -158,6 +160,7 @@ function showLoginSection() {
     if (loginSection) loginSection.style.display = 'block';
     if (votingSection) votingSection.style.display = 'none';
     if (noSeasonSection) noSeasonSection.style.display = 'none';
+    displayResults();
 }
 
 // Show voting section
@@ -176,25 +179,26 @@ function showVotingSection() {
     if (currentVoterName) currentVoterName.textContent = currentVoter;
     displayVotingSection();
     displayVotersList();
+    displayResults();
 }
 
-// Load user's existing votes
+// Load user's existing vote
 async function loadUserVotes() {
     if (!selectedSeason || !currentVoter) {
-        userRatings = {};
+        userVote = null;
         return;
     }
 
     try {
         const vote = await getVoteBySeasonAndVoter(selectedSeason.id, currentVoter);
-        if (vote && vote.ratings) {
-            userRatings = vote.ratings;
+        if (vote && vote.winner) {
+            userVote = vote.winner;
         } else {
-            userRatings = {};
+            userVote = null;
         }
     } catch (error) {
         console.error('Error loading votes:', error);
-        userRatings = {};
+        userVote = null;
     }
 }
 
@@ -210,10 +214,10 @@ function displayVotingSection() {
 
     participantsVotingList.innerHTML = assignments.map(assignment => {
         const hasVideo = videoStatus[assignment.participant];
-        const currentRating = userRatings[assignment.participant] || 0;
+        const isSelected = userVote === assignment.participant;
         
         return `
-            <div class="voting-card ${!hasVideo ? 'no-video' : ''}">
+            <div class="voting-card ${!hasVideo ? 'no-video' : ''} ${isSelected ? 'selected' : ''}">
                 <div class="voting-header">
                     <div>
                         <h3>${assignment.participant}</h3>
@@ -224,15 +228,11 @@ function displayVotingSection() {
                         '<span class="badge badge-warning">⏳ Sin video</span>'
                     }
                 </div>
-                <div class="rating-section">
-                    <label>Calificación (1-10):</label>
-                    <div class="rating-controls">
-                        <input type="number" min="1" max="10" value="${currentRating || ''}" 
-                               class="rating-input" 
-                               id="rating-${assignment.participant}"
-                               oninput="updateRating('${assignment.participant}', this.value)"
-                               placeholder="Escribe tu calificación">
-                    </div>
+                <div class="vote-section">
+                    <button class="btn btn-vote ${isSelected ? 'btn-selected' : ''}" 
+                            onclick="selectWinner('${assignment.participant}')">
+                        ${isSelected ? '✓ Mi favorito' : 'Elegir como ganador'}
+                    </button>
                 </div>
             </div>
         `;
@@ -241,30 +241,22 @@ function displayVotingSection() {
     submitVotesBtn.disabled = false;
 }
 
-// Update rating
-function updateRating(participant, value) {
-    const numValue = parseInt(value);
-    if (numValue >= 1 && numValue <= 10) {
-        userRatings[participant] = numValue;
-    } else if (value === '') {
-        userRatings[participant] = 0;
-    }
+// Select winner
+function selectWinner(participant) {
+    userVote = participant;
+    displayVotingSection();
 }
 
-// Submit votes
+// Submit vote
 submitVotesBtn.addEventListener('click', async () => {
     if (!selectedSeason) {
         alert('No hay una temporada seleccionada');
         return;
     }
 
-    // Check if all participants have been rated
-    const allRated = assignments.every(a => userRatings[a.participant] && userRatings[a.participant] > 0);
-    
-    if (!allRated) {
-        if (!confirm('No has calificado a todos los participantes. ¿Deseas enviar los votos de todas formas?')) {
-            return;
-        }
+    if (!userVote) {
+        alert('Por favor elige un participante como ganador');
+        return;
     }
 
     try {
@@ -272,17 +264,18 @@ submitVotesBtn.addEventListener('click', async () => {
             seasonId: selectedSeason.id,
             seasonName: selectedSeason.name,
             voterName: currentVoter,
-            ratings: userRatings,
+            winner: userVote,
             submittedAt: new Date().toISOString()
         };
 
         await saveVote(voteData);
         
-        alert('¡Votos enviados exitosamente!');
+        alert('¡Voto enviado exitosamente!');
         await displayVotersList();
+        await displayResults();
     } catch (error) {
-        console.error('Error saving votes:', error);
-        alert('Error al guardar los votos. Por favor intenta de nuevo.');
+        console.error('Error saving vote:', error);
+        alert('Error al guardar el voto. Por favor intenta de nuevo.');
     }
 });
 
@@ -320,6 +313,113 @@ async function displayVotersList() {
     } catch (error) {
         console.error('Error loading voters:', error);
         votersList.innerHTML = '<div class="empty-message">Error al cargar votantes</div>';
+    }
+}
+
+// Toggle results panel
+function toggleResults() {
+    const body = document.getElementById('resultsBody');
+    const icon = document.getElementById('resultsToggleIcon');
+    if (!body) return;
+    const collapsed = body.style.display === 'none';
+    body.style.display = collapsed ? 'block' : 'none';
+    if (icon) icon.textContent = collapsed ? '▼' : '▶';
+}
+
+// Display results chart
+async function displayResults() {
+    const resultsSection = document.getElementById('resultsSection');
+    const resultsChart = document.getElementById('resultsChart');
+    if (!resultsSection || !resultsChart) return;
+
+    if (!selectedSeason || !assignments || assignments.length === 0) {
+        resultsSection.style.display = 'none';
+        return;
+    }
+
+    try {
+        const votes = await getVotesBySeason(selectedSeason.id);
+
+        if (!votes || votes.length === 0) {
+            resultsSection.style.display = 'none';
+            return;
+        }
+
+        resultsSection.style.display = 'block';
+
+        // Count votes per participant
+        const counts = {};
+        assignments.forEach(a => { counts[a.participant] = { artist: a.artist, votes: 0, voters: [] }; });
+        votes.forEach(v => {
+            if (v.winner && counts[v.winner]) {
+                counts[v.winner].votes += 1;
+                counts[v.winner].voters.push(v.voterName);
+            }
+        });
+
+        // Sort and assign ranks
+        const sorted = Object.entries(counts)
+            .map(([participant, data]) => ({ participant, ...data }))
+            .sort((a, b) => b.votes - a.votes);
+
+        sorted.forEach((r, i) => {
+            if (i === 0) r.rank = 1;
+            else if (r.votes === sorted[i - 1].votes) r.rank = sorted[i - 1].rank;
+            else r.rank = i + 1;
+        });
+
+        const maxVotes = sorted[0].votes;
+        const tiedRanks = new Set(
+            sorted.filter((r, i, arr) => arr.filter(x => x.rank === r.rank).length > 1).map(r => r.rank)
+        );
+
+        function rankColor(rank) {
+            if (rank === 1) return '#f39c12';
+            if (rank === 2) return '#95a5a6';
+            if (rank === 3) return '#cd7f32';
+            return '#6c5ce7';
+        }
+        function rankMedal(rank, tied) {
+            if (rank === 1) return tied ? '🤝🥇' : '🥇';
+            if (rank === 2) return tied ? '🤝🥈' : '🥈';
+            if (rank === 3) return tied ? '🤝🥉' : '🥉';
+            return `#${rank}`;
+        }
+
+        resultsChart.innerHTML = sorted.map(r => {
+            const pct = maxVotes > 0 ? (r.votes / maxVotes) * 100 : 0;
+            const color = rankColor(r.rank);
+            const isTied = tiedRanks.has(r.rank);
+            const medal = rankMedal(r.rank, isTied);
+            const isMyVote = userVote === r.participant;
+
+            return `
+                <div class="result-row">
+                    <div class="result-row-header">
+                        <div style="display:flex;align-items:center;gap:0.6rem;">
+                            <span style="font-size:1.3rem;">${medal}</span>
+                            <div>
+                                <div style="font-weight:600;color:var(--text-primary);">
+                                    ${r.participant}
+                                    ${isMyVote ? '<span class="badge badge-info" style="margin-left:0.4rem;">Mi voto</span>' : ''}
+                                    ${isTied ? `<span style="font-size:0.7rem;background:${color}33;color:${color};border:1px solid ${color};border-radius:10px;padding:0.1rem 0.4rem;margin-left:0.3rem;">Empate</span>` : ''}
+                                </div>
+                                <div style="font-size:0.85rem;color:var(--text-secondary);">Canta: ${r.artist}</div>
+                            </div>
+                        </div>
+                        <div style="font-size:1.4rem;font-weight:bold;color:${color};">${r.votes} <span style="font-size:0.8rem;color:var(--text-secondary);">votos</span></div>
+                    </div>
+                    <div class="result-bar-bg">
+                        <div class="result-bar" style="width:${pct}%;background:linear-gradient(90deg,${color},${color}aa);">
+                            ${pct > 20 ? `<span style="color:#fff;font-weight:600;font-size:0.85rem;padding-right:0.5rem;">${r.votes}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error displaying results:', error);
     }
 }
 
