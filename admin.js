@@ -31,6 +31,11 @@ const artistsList = document.getElementById('artistsList');
 
 const performDrawBtn = document.getElementById('performDraw');
 const drawResults = document.getElementById('drawResults');
+const manualAssignBtn = document.getElementById('manualAssignBtn');
+const manualAssignPanel = document.getElementById('manualAssignPanel');
+const manualAssignForm = document.getElementById('manualAssignForm');
+const confirmManualBtn = document.getElementById('confirmManualBtn');
+const cancelManualBtn = document.getElementById('cancelManualBtn');
 
 const trackingList = document.getElementById('trackingList');
 
@@ -497,26 +502,36 @@ function displayAssignments() {
     if (!currentSeason) {
         drawResults.innerHTML = '<p class="empty-message">Activa una temporada para ver asignaciones</p>';
         if (trackingList) trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
-        // Enable button
+        // Enable buttons
         if (performDrawBtn) {
             performDrawBtn.disabled = false;
             performDrawBtn.innerHTML = '🎲 Realizar Sorteo';
             performDrawBtn.style.opacity = '1';
             performDrawBtn.style.cursor = 'pointer';
         }
+        if (manualAssignBtn) {
+            manualAssignBtn.disabled = false;
+            manualAssignBtn.style.opacity = '1';
+            manualAssignBtn.style.cursor = 'pointer';
+        }
         return;
     }
 
     if (assignments.length === 0) {
         console.log('No hay asignaciones');
-        drawResults.innerHTML = '<p class="empty-message">No hay asignaciones. Realiza el sorteo primero.</p>';
+        drawResults.innerHTML = '<p class="empty-message">No hay asignaciones. Realiza el sorteo o asigna manualmente.</p>';
         if (trackingList) trackingList.innerHTML = '<p class="empty-message">No hay asignaciones</p>';
-        // Enable button
+        // Enable buttons
         if (performDrawBtn) {
             performDrawBtn.disabled = false;
             performDrawBtn.innerHTML = '🎲 Realizar Sorteo';
             performDrawBtn.style.opacity = '1';
             performDrawBtn.style.cursor = 'pointer';
+        }
+        if (manualAssignBtn) {
+            manualAssignBtn.disabled = false;
+            manualAssignBtn.style.opacity = '1';
+            manualAssignBtn.style.cursor = 'pointer';
         }
         return;
     }
@@ -529,6 +544,11 @@ function displayAssignments() {
         performDrawBtn.innerHTML = '✓ Sorteo Realizado';
         performDrawBtn.style.opacity = '0.6';
         performDrawBtn.style.cursor = 'not-allowed';
+    }
+    if (manualAssignBtn) {
+        manualAssignBtn.disabled = true;
+        manualAssignBtn.style.opacity = '0.6';
+        manualAssignBtn.style.cursor = 'not-allowed';
     }
 
     // Show tracking section
@@ -547,8 +567,9 @@ function displayAssignments() {
                 <div style="display: flex; gap: 0.5rem;">
                     <button onclick="resetDraw()" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; background-color: #e74c3c;">
                         🔄 Nuevo Sorteo
-                    </button>
-                    <button onclick="copyAssignmentsForWhatsApp()" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+                    </button>                    <button onclick="showManualAssignPanel()" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;">
+                        ✏️ Editar Manual
+                    </button>                    <button onclick="copyAssignmentsForWhatsApp()" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
                         📋 Copiar para WhatsApp
                     </button>
                 </div>
@@ -589,10 +610,86 @@ async function resetDraw() {
         performDrawBtn.style.opacity = '1';
         performDrawBtn.style.cursor = 'pointer';
     }
+    if (manualAssignBtn) {
+        manualAssignBtn.disabled = false;
+        manualAssignBtn.style.opacity = '1';
+    }
     
     displayAssignments();
     await saveCurrentSeasonData();
 }
+
+// Manual Assignment
+manualAssignBtn.addEventListener('click', () => {
+    if (!currentSeason) {
+        alert('Debes activar una temporada primero');
+        return;
+    }
+    if (participants.length === 0) {
+        alert('Agrega participantes primero');
+        return;
+    }
+    if (artists.length === 0) {
+        alert('Agrega artistas primero');
+        return;
+    }
+    if (assignments.length > 0) {
+        if (!confirm('Ya existen asignaciones. ¿Deseas reemplazarlas con asignación manual?')) return;
+    }
+    showManualAssignPanel();
+});
+
+function showManualAssignPanel() {
+    manualAssignPanel.style.display = 'block';
+    manualAssignForm.innerHTML = participants.map((participant, i) => {
+        const currentArtist = assignments.find(a => a.participant === participant)?.artist || '';
+        return `
+            <div style="display: flex; align-items: center; padding: 0.75rem 1rem; background: var(--bg-color); border-radius: 8px; gap: 1rem;">
+                <span style="font-weight: 600; flex: 1; color: var(--text-primary);">${participant}</span>
+                <span style="color: var(--primary-color); font-size: 1.2rem;">→</span>
+                <select id="manual-artist-${i}" class="input-field" style="flex: 1; padding: 0.5rem;">
+                    <option value="">-- Elige un artista --</option>
+                    ${artists.map(artist => `
+                        <option value="${artist}" ${artist === currentArtist ? 'selected' : ''}>${artist}</option>
+                    `).join('')}
+                </select>
+            </div>
+        `;
+    }).join('');
+}
+
+confirmManualBtn.addEventListener('click', async () => {
+    const newAssignments = [];
+    let valid = true;
+
+    participants.forEach((participant, i) => {
+        const select = document.getElementById(`manual-artist-${i}`);
+        const artist = select ? select.value : '';
+        if (!artist) {
+            valid = false;
+        } else {
+            newAssignments.push({ participant, artist, participantIndex: i });
+        }
+    });
+
+    if (!valid) {
+        alert('Por favor asigna un artista a cada participante antes de confirmar.');
+        return;
+    }
+
+    assignments = newAssignments;
+    videoStatus = {};
+    participants.forEach(p => { videoStatus[p] = false; });
+
+    manualAssignPanel.style.display = 'none';
+    displayAssignments();
+    await saveCurrentSeasonData();
+    alert('¡Asignaciones guardadas exitosamente!');
+});
+
+cancelManualBtn.addEventListener('click', () => {
+    manualAssignPanel.style.display = 'none';
+});
 
 // Toggle video status
 async function toggleVideoStatus(participant) {
@@ -689,77 +786,128 @@ showResultsBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Calculate results
+    // Calculate results based on winner votes
     const results = {};
     assignments.forEach(a => {
         results[a.participant] = {
             artist: a.artist,
-            totalScore: 0,
-            voteCount: 0,
-            ratings: []
+            votes: 0,
+            voters: []
         };
     });
 
     votes.forEach(vote => {
-        Object.entries(vote.ratings).forEach(([participant, rating]) => {
-            if (results[participant]) {
-                results[participant].totalScore += rating;
-                results[participant].voteCount += 1;
-                results[participant].ratings.push({ voter: vote.voterName, rating });
-            }
-        });
+        if (vote.winner && results[vote.winner]) {
+            results[vote.winner].votes += 1;
+            results[vote.winner].voters.push(vote.voterName);
+        }
     });
 
-    // Calculate averages and sort
+    // Sort by vote count
     const sortedResults = Object.entries(results)
         .map(([participant, data]) => ({
             participant,
             artist: data.artist,
-            average: data.voteCount > 0 ? (data.totalScore / data.voteCount).toFixed(2) : 0,
-            totalScore: data.totalScore,
-            voteCount: data.voteCount,
-            ratings: data.ratings
+            votes: data.votes,
+            voters: data.voters
         }))
-        .sort((a, b) => b.average - a.average);
+        .sort((a, b) => b.votes - a.votes);
 
-    // Display results
-    const maxAverage = Math.max(...sortedResults.map(r => parseFloat(r.average)));
-    
+    // Assign rank positions handling ties
+    let rank = 1;
+    sortedResults.forEach((r, i) => {
+        if (i === 0) {
+            r.rank = 1;
+        } else if (r.votes === sortedResults[i - 1].votes) {
+            r.rank = sortedResults[i - 1].rank;
+        } else {
+            rank = i + 1;
+            r.rank = rank;
+        }
+    });
+
+    const maxVotes = sortedResults[0] ? sortedResults[0].votes : 0;
+
+    // Build winner/tie banner for rank 1
+    const rank1 = sortedResults.filter(r => r.rank === 1);
+    const isTie1 = rank1.length > 1;
+
+    // Color and medal per rank
+    function rankColor(rank) {
+        if (rank === 1) return '#f39c12';
+        if (rank === 2) return '#95a5a6';
+        if (rank === 3) return '#cd7f32';
+        return '#6c5ce7';
+    }
+    function rankMedal(rank, isTied) {
+        if (rank === 1) return isTied ? '🤝🥇' : '🥇';
+        if (rank === 2) return isTied ? '🤝🥈' : '🥈';
+        if (rank === 3) return isTied ? '🤝🥉' : '🥉';
+        return `#${rank}`;
+    }
+
+    const tiedRanks = new Set(
+        sortedResults
+            .filter((r, i, arr) => arr.filter(x => x.rank === r.rank).length > 1)
+            .map(r => r.rank)
+    );
+
     resultsDisplay.innerHTML = `
         <h3>Resultados de ${currentSeason.name}</h3>
         <p>Total de votantes: ${votes.length}</p>
+        ${maxVotes > 0 ? `
+            <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%); border-radius: 16px; border: 2px solid #d4af37;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">${isTie1 ? '🤝 EMPATE — 1er LUGAR 🤝' : '🏆 GANADOR 🏆'}</div>
+                <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 0.75rem;">
+                    ${rank1.map(w => `
+                        <div>
+                            <div style="font-size: 1.6rem; font-weight: bold; color: #d4af37;">${w.participant}</div>
+                            <div style="font-size: 1rem; color: #b8b8b8;">Canta: ${w.artist}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="font-size: 1.4rem; font-weight: bold; color: #ffd700; margin-top: 1rem;">${rank1[0].votes} votos</div>
+            </div>
+        ` : ''}
         <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem;">
-            ${sortedResults.map((r, i) => {
-                const percentage = maxAverage > 0 ? (parseFloat(r.average) / maxAverage) * 100 : 0;
-                const barColor = i === 0 ? '#f39c12' : i === 1 ? '#95a5a6' : i === 2 ? '#cd7f32' : '#6c5ce7';
-                
+            ${sortedResults.map(r => {
+                const percentage = maxVotes > 0 ? (r.votes / maxVotes) * 100 : 0;
+                const color = rankColor(r.rank);
+                const isTied = tiedRanks.has(r.rank);
+                const medal = rankMedal(r.rank, isTied);
+
                 return `
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="font-size: 1.5rem; font-weight: bold; color: ${barColor}; min-width: 2rem;">${i + 1}</span>
+                            <span style="font-size: 1.4rem; min-width: 2.5rem;">${medal}</span>
                             <div>
-                                <div style="font-weight: 600; font-size: 1.1rem; color: black;">${r.participant}</div>
-                                <div style="font-size: 0.9rem; color: #636e72;">Canta: ${r.artist}</div>
+                                <div style="font-weight: 600; font-size: 1.1rem; color: #f5f5f5;">
+                                    ${r.participant}
+                                    ${isTied ? `<span style="font-size: 0.75rem; background: ${color}33; color: ${color}; border: 1px solid ${color}; border-radius: 12px; padding: 0.1rem 0.5rem; margin-left: 0.4rem;">Empate</span>` : ''}
+                                </div>
+                                <div style="font-size: 0.9rem; color: #b8b8b8;">Canta: ${r.artist}</div>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 1.5rem; font-weight: bold; color: ${barColor};">${r.average}</div>
-                            <div style="font-size: 0.85rem; color: #636e72;">${r.voteCount} votos</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: ${color};">${r.votes}</div>
+                            <div style="font-size: 0.85rem; color: #636e72;">votos</div>
                         </div>
                     </div>
-                    <div style="background: #ecf0f1; border-radius: 10px; height: 30px; overflow: hidden; position: relative;">
-                        <div style="background: linear-gradient(90deg, ${barColor}, ${barColor}dd); height: 100%; width: ${percentage}%; border-radius: 10px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 0.5rem;">
-                            ${percentage > 20 ? `<span style="color: white; font-weight: 600; font-size: 0.9rem;">${r.average}</span>` : ''}
+                    <div style="background: #3a3a3a; border-radius: 10px; height: 30px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, ${color}, ${color}cc); height: 100%; width: ${percentage}%; border-radius: 10px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 0.5rem;">
+                            ${percentage > 20 ? `<span style="color: white; font-weight: 600; font-size: 0.9rem;">${r.votes} votos</span>` : ''}
                         </div>
                     </div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: 3rem; font-size: 0.85rem; color: #666;">
-                        ${r.ratings.map(rating => `
-                            <span style="background: #f8f9fa; padding: 0.25rem 0.75rem; border-radius: 20px; border: 1px solid #dee2e6;">
-                                <strong>${rating.voter}:</strong> ${rating.rating} pts
-                            </span>
-                        `).join('')}
-                    </div>
+                    ${r.voters.length > 0 ? `
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-left: 2.5rem; font-size: 0.85rem;">
+                            ${r.voters.map(voter => `
+                                <span style="background: #3a3a3a; color: #b8b8b8; padding: 0.25rem 0.75rem; border-radius: 20px; border: 1px solid #555;">
+                                    ${voter}
+                                </span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             `}).join('')}
         </div>

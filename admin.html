@@ -63,11 +63,23 @@
                 <!-- Sección de Sorteo y Seguimiento -->
                 <div class="card">
                     <h2>Sorteo y Seguimiento</h2>
-                    <p class="info-text">Asigna aleatoriamente un artista a cada participante y marca cuándo envían su video</p>
-                    <p class="info-text" style="margin-bottom: 1rem;">Marca cuando cada participante envíe su video</p>
-                    <button id="performDraw" class="btn btn-secondary">🎲 Realizar Sorteo</button>
+                    <p class="info-text">Asigna un artista a cada participante por sorteo o manualmente</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button id="performDraw" class="btn btn-secondary">🎲 Realizar Sorteo</button>
+                        <button id="manualAssignBtn" class="btn btn-primary">✏️ Asignar Manualmente</button>
+                    </div>
                     <div id="drawResults" class="draw-results"></div>
                     
+                    <!-- Panel de asignación manual -->
+                    <div id="manualAssignPanel" style="display: none; margin-top: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary-color);">✏️ Asignación Manual</h3>
+                        <div id="manualAssignForm" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <button id="confirmManualBtn" class="btn btn-primary">✅ Confirmar Asignaciones</button>
+                            <button id="cancelManualBtn" class="btn btn-secondary">Cancelar</button>
+                        </div>
+                    </div>
+
                     <!-- Seguimiento de Videos -->
                     <div id="trackingSection" style="margin-top: 2rem; display: none;">
                         <div id="trackingList" class="tracking-list"></div>

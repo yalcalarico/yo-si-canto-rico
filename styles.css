@@ -530,6 +530,7 @@ body {
 
 .participants-voting-list {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
@@ -588,20 +589,115 @@ body {
     color: var(--text-primary);
 }
 
-.rating-input {
-    flex: 1;
-    padding: 10px;
-    font-size: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
+.vote-section {
+    margin-top: 16px;
 }
 
-.rating-display {
-    font-size: 1.5rem;
-    font-weight: bold;
+.btn-vote {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid var(--primary-color);
+    background: transparent;
     color: var(--primary-color);
-    min-width: 40px;
-    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-vote:hover {
+    background: var(--primary-color);
+    color: #000000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.btn-vote.btn-selected {
+    background: var(--gold-gradient);
+    color: #000000;
+    border-color: var(--secondary-color);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.6);
+}
+
+.voting-card.selected {
+    border: 2px solid var(--primary-color);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.voting-card.selected .voting-header {
+    border-bottom-color: var(--primary-color);
+}
+
+/* Results Chart */
+.results-collapsible {
+    padding: 0;
+    overflow: hidden;
+}
+
+.results-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.results-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.results-toggle span:last-child {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s;
+}
+
+.results-body {
+    padding: 0 1.5rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.results-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.result-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.result-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-bar-bg {
+    background: var(--bg-color);
+    border-radius: 8px;
+    height: 28px;
+    overflow: hidden;
+}
+
+.result-bar {
+    height: 100%;
+    border-radius: 8px;
+    min-width: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    transition: width 0.6s ease;
 }
 
 /* Results Display */
@@ -763,6 +859,17 @@ body {
     border-color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.season-item.selected {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(255, 215, 0, 0.05) 100%);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+}
+
+.season-item.selected .season-name {
+    color: var(--primary-color);
+    font-weight: 700;
 }
 
 .season-item-header {
@@ -1054,6 +1161,10 @@ body {
     .voting-main {
         order: 3;
     }
+    
+    .participants-voting-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1097,6 +1208,10 @@ body {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+    }
+    
+    .participants-voting-list {
+        grid-template-columns: 1fr;
     }
     
     .login-form {
